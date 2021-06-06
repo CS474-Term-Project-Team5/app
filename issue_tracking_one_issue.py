@@ -45,7 +45,7 @@ def main():
         similarity = cosine_similarity(X_count, X_count)
 
         # extract corresponding (row, column) pairs
-        indices = np.where(similarity > 0.04)
+        indices = np.where(similarity > 0.000004)
         index_row, index_col = indices
         similarity_result = zip(index_row, index_col)
         similarity_set = set()
@@ -70,33 +70,43 @@ def main():
         # reclustering by similarity
         issue_holders = []
         neExtractor = NeExtractor()
-        top_ranking = dict()
-        for sub_cluster in cluster:
+        top2 = sorted(cluster, key=lambda x: article[article['cluster'].isin(
+            x)].shape[0], reverse=True)[:2]
+
+        for sub_cluster in top2:
+            print("[On-Issue Event]")
             sub_cluster = article[article['cluster'].isin(sub_cluster)]
-            top_issue = keywordExtractor.extract(sub_cluster)
-            ne_list = neExtractor.extract(sub_cluster)
-            top_ranking[capital(top_issue[0])] = sub_cluster.shape[0]
 
-            doc_num = sub_cluster.shape[0]
-            person = [entities[0]
-                      for entities in ne_list if entities[1] == "PERSON"]
-            place = [entities[0]
-                     for entities in ne_list if entities[1] == "LOC"]
-            org = [entities[0] for entities in ne_list if entities[1] == "ORG"]
+            top_ranking = dict()
+            months = sorted(list(set(sub_cluster.month)))
+            for m in months:
+                cluster_by_month = sub_cluster[sub_cluster.month == m]
+                top_issue = keywordExtractor.extract(cluster_by_month)
+                ne_list = neExtractor.extract(cluster_by_month)
+                top_ranking[capital(top_issue[0])] = cluster_by_month.shape[0]
 
-            issueHolder = IssueHolder(top_issue, doc_num, person, org, place)
-            issue_holders.append(issueHolder)
+                doc_num = sub_cluster.shape[0]
+                person = [entities[0]
+                          for entities in ne_list if entities[1] == "PERSON"]
+                place = [entities[0]
+                         for entities in ne_list if entities[1] == "LOC"]
+                org = [entities[0]
+                       for entities in ne_list if entities[1] == "ORG"]
 
-        top_ranking = sorted(issue_holders, reverse=True,
-                             key=lambda x: x.num)[:2]
+                issueHolder = IssueHolder(
+                    top_issue, doc_num, person, org, place)
+                issue_holders.append(issueHolder)
+
+                print("{}".foramt(
+                    " -> ".join([capital(holder.topic) for holder in issue_holders])))
 
         print("[Detailed Information(per envent)]")
-        for topic in top_ranking:
+        for holder in issue_holders:
             # print("({}: {})".format(topic.topic[0], topic.num), end=' ')
-            print("Event: {}".format(capital(topic.topic[0])))
-            print("\t- Person: {}".format(", ".join(topic.person[:5])))
-            print("\t- Organization: {}".format(", ".join(topic.org[:5])))
-            print("\t- Place: {}".format(", ".join(topic.place[:5])))
+            print("Event: {}({})".format(capital(holder.topic[0]), holder.num))
+            print("\t- Person: {}".format(", ".join(holder.person[:3])))
+            print("\t- Organization: {}".format(", ".join(holder.org[:3])))
+            print("\t- Place: {}".format(", ".join(holder.place[:3])))
             print()
     print("=======================")
 
