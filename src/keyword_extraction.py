@@ -27,8 +27,9 @@ class KeywordExtractor:
                 ' ,', ' '), list(ne_set)) for keyword in keyword_set]
 
             # vectorize keywords
+            max_df = doc_num * 0.7 if doc_num > 1 else 1
             vectorizer = CountVectorizer(max_features=1500, ngram_range=(
-                2, 5), min_df=1, max_df=doc_num/3, stop_words=stopwords.words('english'))
+                2, 5), min_df=1, max_df=max_df, stop_words=stopwords.words('english'))
             X_count = vectorizer.fit_transform(keyword_set).toarray()
 
             # extract top nth keyword
@@ -54,9 +55,9 @@ class KeywordExtractor:
             doc_num = len(keyword_set)
             keyword_set = [preprocessing(keyword.replace(
                 ' ,', ' '), list(ne_set)) for keyword in keyword_set]
-
+            max_df = doc_num * 0.7 if doc_num > 1 else 1
             vectorizer = CountVectorizer(max_features=1500, ngram_range=(
-                2, 5), min_df=1, max_df=doc_num/3, stop_words=stopwords.words('english'))
+                2, 5), min_df=1, max_df=max_df, stop_words=stopwords.words('english'))
             X_count = vectorizer.fit_transform(keyword_set).toarray()
             # X_tfidf = TfidfTransformer().fit_transform(X_count).toarray()
 

@@ -18,12 +18,12 @@ SAVE_PATH = [RECLUSTERING_2015_PATH,
 def main():
     for year in range(3):
         keywordExtractor = KeywordExtractor()
-        keyword_2015 = keywordExtractor.extract(ARTICLE[year])
+        extracted_keyword = keywordExtractor.extract(ARTICLE[year])
 
         # vectorize using keyword n-grams
         vectorizer = CountVectorizer(max_features=1500, ngram_range=(
             2, 5), min_df=1, max_df=0.7, stop_words=stopwords.words('english'))
-        X_count = vectorizer.fit_transform(keyword_2015)
+        X_count = vectorizer.fit_transform(extracted_keyword)
 
         # apply tfidf
         # X_tfidf = TfidfTransformer().fit_transform(X_count).toarray()

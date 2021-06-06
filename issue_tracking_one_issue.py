@@ -1,35 +1,68 @@
-from utils.utils import capital, preprocessing
-from env.env import SUB_CLUSTER_PATH
+from utils.utils import bfs
+from src.keyword_extraction import KeywordExtractor
+from env.env import SECOND_CLUSTERING_NUMBER, SUB_CLUSTER_PATH
+from sklearn.metrics.pairwise import cosine_similarity
 import os
-import pandas as pd
-import ast
+import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords
 
-dir_path = SUB_CLUSTER_PATH + r'/2015/'
 
-file_list = os.listdir(dir_path)
+def main():
+    dir_path = SUB_CLUSTER_PATH + r'/2015/'
 
-for file in file_list:
-    cluster = pd.read_csv(dir_path + file)
-    doc_num = cluster.shape[0]
+    file_list = os.listdir(dir_path)
 
-    ne_set = cluster["ne"]
-    ne_set = [ne.lower()
-              for ne_list in ne_set for ne in ast.literal_eval(ne_list)]
+    for file in file_list:
+        keywordExtractor = KeywordExtractor()
+        extracted_keyword = keywordExtractor.extract(dir_path + file)
 
-    keyword_set = cluster["keyword"]
-    keyword_set = [preprocessing(keyword.replace(
-        ' ,', ' '), list(ne_set)) for keyword in keyword_set]
+        # vectorize using keyword n-grams
+        vectorizer = CountVectorizer(max_features=1500, ngram_range=(
+            2, 5), min_df=1, max_df=0.7, stop_words=stopwords.words('english'))
+        X_count = vectorizer.fit_transform(extracted_keyword)
 
-    vectorizer = CountVectorizer(max_features=1500, ngram_range=(
-        2, 5), min_df=1, max_df=doc_num/3, stop_words=stopwords.words('english'))
-    X_count = vectorizer.fit_transform(keyword_set).toarray()
+        # apply tfidf
+        # X_tfidf = TfidfTransformer().fit_transform(X_count).toarray()
 
-    result = pd.DataFrame(X_count, columns=vectorizer.get_feature_names())
-    result = list(result.sum(axis=0).sort_values(ascending=False).keys()[:100])
+        # calculate similarity
+        similarity = cosine_similarity(X_count, X_count)
 
-    print()
-    print('Topic:', capital(result[0]))
-    print('Docs number:', doc_num)
-    print()
+        # extract corresponding (row, column) pairs
+        indices = np.where(similarity > 0.03)
+        index_row, index_col = indices
+        similarity_result = zip(index_row, index_col)
+        similarity_set = set()
+        for (r, c) in similarity_result:
+            if (r != c):
+                p = (r, c) if r < c else (c, r)
+                similarity_set.add(p)
+
+        similarity_result = list(similarity_set)
+
+        # create sub cluster using bfs algorithm
+        cluster_index = [i for i in range(SECOND_CLUSTERING_NUMBER)]
+        cluster = []
+
+        for i in cluster_index:
+            if i in [e for sub in cluster for e in sub]:
+                continue
+
+            sub_cluster = []
+            sub_cluster.append(i)
+            cluster.append(bfs(sub_cluster, 0, similarity_result))
+
+        # reclustering
+        top_ranking = keywordExtractor.recluster(dir_path + file, cluster)
+
+        top_ranking = sorted(top_ranking.items(), reverse=True,
+                             key=lambda x: x[1])[:2]
+        print("=======================")
+        for topic in top_ranking:
+            print(topic, end=' ')
+        print()
+    print("=======================")
+
+
+if __name__ == "__main__":
+    main()
