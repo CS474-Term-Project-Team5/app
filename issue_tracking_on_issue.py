@@ -27,15 +27,17 @@ def main():
         print(capital(issue[0]))
         print()
 
-        for cluster_idx in range(len(set(article.cluster))):
+        for cluster_idx in list(set(article.cluster)):
             cluster = article[article['cluster'] == cluster_idx]
             # extract corresponding cluster
             keyword_list = keywordExtractor.extract(cluster)[:30]
             extracted_keyword.append(" ".join(keyword_list))
 
         # vectorize using keyword n-grams
+        max_df = len(extracted_keyword) * \
+            0.7 if len(extracted_keyword) > 1 else 1
         vectorizer = CountVectorizer(max_features=1500, ngram_range=(
-            3, 6), min_df=1, max_df=0.7, stop_words=stopwords.words('english'))
+            3, 6), min_df=1, max_df=max_df, stop_words=stopwords.words('english'))
         X_count = vectorizer.fit_transform(extracted_keyword)
 
         # apply tfidf
@@ -73,19 +75,20 @@ def main():
         top2 = sorted(cluster, key=lambda x: article[article['cluster'].isin(
             x)].shape[0], reverse=True)[:2]
 
+        # run on-issue tracking analysis
+        eventExtractor = KeywordExtractor((3, 6))
         for sub_cluster in top2:
             print("[On-Issue Event]")
             sub_cluster = article[article['cluster'].isin(sub_cluster)]
 
-            top_ranking = dict()
+            # divide top2 sub_cluster by time
             months = sorted(list(set(sub_cluster.month)))
             for m in months:
                 cluster_by_month = sub_cluster[sub_cluster.month == m]
-                top_issue = keywordExtractor.extract(cluster_by_month)
+                top_issue = eventExtractor.extract(cluster_by_month)
                 ne_list = neExtractor.extract(cluster_by_month)
-                top_ranking[capital(top_issue[0])] = cluster_by_month.shape[0]
 
-                doc_num = sub_cluster.shape[0]
+                doc_num = cluster_by_month.shape[0]
                 person = [entities[0]
                           for entities in ne_list if entities[1] == "PERSON"]
                 place = [entities[0]
@@ -97,17 +100,21 @@ def main():
                     top_issue, doc_num, person, org, place)
                 issue_holders.append(issueHolder)
 
-                print("{}".foramt(
-                    " -> ".join([capital(holder.topic) for holder in issue_holders])))
-
-        print("[Detailed Information(per envent)]")
-        for holder in issue_holders:
-            # print("({}: {})".format(topic.topic[0], topic.num), end=' ')
-            print("Event: {}({})".format(capital(holder.topic[0]), holder.num))
-            print("\t- Person: {}".format(", ".join(holder.person[:3])))
-            print("\t- Organization: {}".format(", ".join(holder.org[:3])))
-            print("\t- Place: {}".format(", ".join(holder.place[:3])))
+            # print events by time flows(month)
+            print("{}".format(
+                " -> ".join([holder.topic[0] for holder in issue_holders])))
             print()
+
+            # print detailed issues
+            print("[Detailed Information(per envent)]")
+            for holder in issue_holders:
+                # print("({}: {})".format(topic.topic[0], topic.num), end=' ')
+                print("Event: {}({})".format(
+                    capital(holder.topic[0]), holder.num))
+                print("\t- Person: {}".format(", ".join(holder.person[:3])))
+                print("\t- Organization: {}".format(", ".join(holder.org[:2])))
+                print("\t- Place: {}".format(", ".join(holder.place[:2])))
+                print()
     print("=======================")
 
 
