@@ -110,17 +110,6 @@ def main():
             print("\t- Organization: {}".format(", ".join(holder.org[:3])))
             print("\t- Place: {}".format(", ".join(holder.place[:3])))
             print()
-
-            # print detailed issues
-            print("[Detailed Information(per envent)]")
-            for holder in issue_holders:
-                # print("({}: {})".format(topic.topic[0], topic.num), end=' ')
-                print("Event: {}({})".format(
-                    capital(holder.topic[0]), holder.num))
-                print("\t- Person: {}".format(", ".join(holder.person[:3])))
-                print("\t- Organization: {}".format(", ".join(holder.org[:2])))
-                print("\t- Place: {}".format(", ".join(holder.place[:2])))
-                print()
     print("=======================")
 
 
