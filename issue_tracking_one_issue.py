@@ -27,29 +27,26 @@ def main():
         print(capital(issue[0]))
         print()
 
-        for cluster_idx in range(len(set(article.cluster))):
-            cluster = article[article['cluster'] == cluster_idx]
+        for cluster_idx in range(len(set(article.cluster_e))):
+            cluster = article[article['cluster_e'] == cluster_idx]
             # extract corresponding cluster
-            keyword_list = keywordExtractor.extract(cluster)[:30]
+            keyword_list = keywordExtractor.extract_e(cluster)[:30]
             extracted_keyword.append(" ".join(keyword_list))
 
         # vectorize using keyword n-grams
         vectorizer = CountVectorizer(max_features=1500, ngram_range=(
             3, 6), min_df=1, max_df=0.7, stop_words=stopwords.words('english'))
         X_count = vectorizer.fit_transform(extracted_keyword)
-
         # apply tfidf
         # X_tfidf = TfidfTransformer().fit_transform(X_count).toarray()
 
         # calculate similarity
         similarity = cosine_similarity(X_count, X_count)
-
         # extract corresponding (row, column) pairs
         indices = np.where(similarity > 0.000004)
         index_row, index_col = indices
         similarity_result = zip(index_row, index_col)
         similarity_set = set()
-
         # join similar clusters
         for (r, c) in similarity_result:
             if (r != c):
@@ -66,50 +63,50 @@ def main():
             sub_cluster = []
             sub_cluster.append(i)
             cluster.append(bfs(sub_cluster, 0, similarity_result))
-
         # reclustering by similarity
-        issue_holders = []
+        issue_holders = {}
         neExtractor = NeExtractor()
-        top2 = sorted(cluster, key=lambda x: article[article['cluster'].isin(
-            x)].shape[0], reverse=True)[:2]
-
+        top2 = sorted(cluster, key=lambda x: article[article['cluster_e'].isin(
+            x)].shape[0], reverse=True)
+        print("[On-Issue Event]")
         for sub_cluster in top2:
-            print("[On-Issue Event]")
-            sub_cluster = article[article['cluster'].isin(sub_cluster)]
-
-            top_ranking = dict()
+            sub_cluster = article[article['cluster_e'].isin(sub_cluster)]
             months = sorted(list(set(sub_cluster.month)))
             for m in months:
                 cluster_by_month = sub_cluster[sub_cluster.month == m]
+                person, org, place = neExtractor.extract_top_3(cluster_by_month)
+                doc_num = cluster_by_month.shape[0]
                 top_issue = keywordExtractor.extract(cluster_by_month)
-                ne_list = neExtractor.extract(cluster_by_month)
-                top_ranking[capital(top_issue[0])] = cluster_by_month.shape[0]
-
-                doc_num = sub_cluster.shape[0]
-                person = [entities[0]
-                          for entities in ne_list if entities[1] == "PERSON"]
-                place = [entities[0]
-                         for entities in ne_list if entities[1] == "LOC"]
-                org = [entities[0]
-                       for entities in ne_list if entities[1] == "ORG"]
-
                 issueHolder = IssueHolder(
                     top_issue, doc_num, person, org, place)
-                issue_holders.append(issueHolder)
+                if doc_num >= sub_cluster.shape[0] / 12:
+                    if m not in issue_holders:
+                        issue_holders[m] = [issueHolder]
+                    else:
+                        issue_holders[m].append(issueHolder)
 
-                print("{}".foramt(
-                    " -> ".join([capital(holder.topic) for holder in issue_holders])))
+
+        for k,v in issue_holders.items():
+            v = sorted(v,key=lambda x:x.num, reverse=True)
+            issue_holders[k] = v[0]
+
+        print("{}".format(
+            " -> ".join([capital(holder.topic[0]) for holder in issue_holders.values()])))
 
         print("[Detailed Information(per envent)]")
-        for holder in issue_holders:
+
+        for holder in sorted(issue_holders.items(), key=lambda x:x[0]):
+            holder = holder[1]
             # print("({}: {})".format(topic.topic[0], topic.num), end=' ')
-            print("Event: {}({})".format(capital(holder.topic[0]), holder.num))
+            if capital(holder.topic[0]) == capital(issue[0]):
+                print("Event: {}({})".format(capital(holder.topic[1]), holder.num))
+            else:
+                print("Event: {}({})".format(capital(holder.topic[0]), holder.num))
             print("\t- Person: {}".format(", ".join(holder.person[:3])))
             print("\t- Organization: {}".format(", ".join(holder.org[:3])))
             print("\t- Place: {}".format(", ".join(holder.place[:3])))
             print()
     print("=======================")
-
 
 if __name__ == "__main__":
     main()

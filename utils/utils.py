@@ -56,6 +56,7 @@ def preprocessing(rawtext: str, ne_set: set) -> str:
 
 
 def capital(string):
+    # print(string)
     string_list = string.split()
     string_list = [s.capitalize() for s in string_list]
     return ' '.join(string_list)
