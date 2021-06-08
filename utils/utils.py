@@ -1,6 +1,7 @@
 import re
 import nltk
 from nltk.stem import WordNetLemmatizer
+import pandas as pd
 
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -76,3 +77,8 @@ def bfs(sub_cluster: list, start: int, data: list) -> list:
                 if r not in sub_cluster:
                     sub_cluster.append(r)
     return bfs(sub_cluster, next_start, data)
+
+
+def my_read_csv(path: str, cluster) -> pd.DataFrame:
+    article = pd.read_csv(path)
+    return article
