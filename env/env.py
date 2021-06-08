@@ -21,4 +21,4 @@ RECLUSTERING_2017_PATH = ARTICLE_DIR + \
     r'recluster/koreaherald_2017_recluster_ver.csv'
 
 
-SUB_CLUSTER_PATH = r'/root/app/data/sub_cluster'
+SUB_CLUSTER_PATH = r'./data/sub_cluster'
