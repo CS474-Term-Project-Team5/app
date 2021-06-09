@@ -7,6 +7,8 @@ nltk.download('wordnet')
 stemmer = WordNetLemmatizer()
 
 
+
+
 def preprocessing(rawtext: str, ne_set: set) -> str:
     document = rawtext
     document = re.sub(r'said', '', document)
@@ -76,3 +78,14 @@ def bfs(sub_cluster: list, start: int, data: list) -> list:
                 if r not in sub_cluster:
                     sub_cluster.append(r)
     return bfs(sub_cluster, next_start, data)
+
+def print_event(holder):
+    print("Event: {}({})".format(capital(holder.topic[0]), holder.num))
+    print("\t- Person: {}".format(", ".join(holder.person[:3])))
+    print("\t- Organization: {}".format(", ".join(holder.org[:3])))
+    print("\t- Place: {}".format(", ".join(holder.place[:3])))
+    print("-------------------------")
+
+def print_issue(holder):
+    print("Issue: {}({})".format(capital(holder.topic[0]), holder.num))
+    print("---------------------")

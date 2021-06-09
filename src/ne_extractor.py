@@ -1,6 +1,11 @@
 from utils.utils import capital
 import spacy
 import pandas as pd
+import re
+
+def cleaning_body(x):
+    x = re.sub("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-z]{2,6}$"," ",str(x))
+    return re.sub(r'\([^)]*\)','',str(x)).rstrip()
 
 
 class NeExtractor():
@@ -18,28 +23,30 @@ class NeExtractor():
         return list(ne)
 
     def extract_top_3(self, cluster: pd.DataFrame):
-        rawtext = " ".join(cluster.body)
-        ne = [self.sp(rawtext)]
-        ne = [(e.text, e.lemma_, e.label_)
-              for entities in ne for e in entities.ents]
+
         count_o = {}
         count_p = {}
         count_l = {}
-        for n in ne:
-            if n[2] not in self.ne_type:
-                pass
-            else:
-                if n[2] == self.ne_type[0]:
-                    count = count_o
-                elif n[2] == self.ne_type[1]:
-                    count = count_p
+        for i in cluster[:]['body']:
+            body = cleaning_body(i)
+            ne = [self.sp(body)]
+            ne = [(e.text, e.lemma_, e.label_)
+                  for entities in ne for e in entities.ents]
+            for n in ne:
+                if n[2] not in self.ne_type:
+                    pass
                 else:
-                    count = count_l
+                    if n[2] == self.ne_type[0]:
+                        count = count_o
+                    elif n[2] == self.ne_type[1]:
+                        count = count_p
+                    else:
+                        count = count_l
 
-                if n[1] in count:
-                    count[n[1]] += 1
-                else:
-                    count[n[1]] = 1
+                    if n[1] in count:
+                        count[n[1]] += 1
+                    else:
+                        count[n[1]] = 1
 
         count_o = [capital(n[0]) for n in sorted(count_o.items(),key=(lambda x:x[1]), reverse=True)[:3]]
         count_l = [capital(n[0]) for n in sorted(count_l.items(),key=(lambda x:x[1]), reverse=True)[:3]]

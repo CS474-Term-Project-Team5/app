@@ -14,8 +14,7 @@ import pandas as pd
 def main():
     dir_path = SUB_CLUSTER_PATH + r'/2015/'
 
-    file_list = os.listdir(dir_path)
-
+    file_list = [i for i in os.listdir(dir_path) if ".csv" in i]
     for file in file_list:
         article = pd.read_csv(dir_path + file)
         keywordExtractor = KeywordExtractor()
