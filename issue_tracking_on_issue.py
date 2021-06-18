@@ -68,6 +68,7 @@ def main():
         top2 = sorted(cluster, key=lambda x: article[article['cluster_e'].isin(
             x)].shape[0], reverse=True)
         print("[On-Issue Event]")
+        issueExtractor = KeywordExtractor((3,6))
         for sub_cluster in top2:
             sub_cluster = article[article['cluster_e'].isin(sub_cluster)]
             months = sorted(list(set(sub_cluster.month)))
@@ -75,9 +76,8 @@ def main():
                 cluster_by_month = sub_cluster[sub_cluster.month == m]
                 person, org, place = neExtractor.extract_top_3(cluster_by_month)
                 doc_num = cluster_by_month.shape[0]
-                top_issue = keywordExtractor.extract(cluster_by_month)
-                issueHolder = IssueHolder(
-                    top_issue, doc_num, person, org, place)
+                top_issue = issueExtractor.extract(cluster_by_month)
+                issueHolder = IssueHolder(top_issue, doc_num, person, org, place)
                 if doc_num >= sub_cluster.shape[0] / 12:
                     if m not in issue_holders:
                         issue_holders[m] = [issueHolder]

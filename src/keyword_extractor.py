@@ -6,7 +6,8 @@ from nltk.corpus import stopwords
 
 
 class KeywordExtractor:
-    def __init__(self) -> None:
+    def __init__(self, n_gram = (2, 5)) -> None:
+        self.n_gram = n_gram
         pass
 
     def extract(self, cluster: pd.DataFrame) -> list:
@@ -46,8 +47,7 @@ class KeywordExtractor:
 
         # vectorize keywords
         max_df = doc_num * 0.7 if doc_num > 1 else 1
-        vectorizer = CountVectorizer(max_features=1500, ngram_range=(
-            2, 5), min_df=1, max_df=max_df, stop_words=stopwords.words('english'))
+        vectorizer = CountVectorizer(max_features=1500, ngram_range=self.n_gram, min_df=1, max_df=max_df, stop_words=stopwords.words('english'))
         X_count = vectorizer.fit_transform(keyword_set).toarray()
 
         # extract top nth keywords
