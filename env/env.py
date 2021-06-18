@@ -3,9 +3,9 @@ SECOND_CLUSTERING_NUMBER = 20
 
 ARTICLE_DIR = r'/root/app/data/'
 
-ARTICLE_2015 = ARTICLE_DIR + r'koreaherald_2015_30_ver.csv'
-ARTICLE_2016 = ARTICLE_DIR + r'koreaherald_2016_30_ver.csv'
-ARTICLE_2017 = ARTICLE_DIR + r'koreaherald_2017_30_ver.csv'
+ARTICLE_2015 = ARTICLE_DIR + r'koreaherald_2015.csv'
+ARTICLE_2016 = ARTICLE_DIR + r'koreaherald_2016.csv'
+ARTICLE_2017 = ARTICLE_DIR + r'koreaherald_2017.csv'
 
 
 FIRST_RECLUSTERING_2015_SIM = 0.055

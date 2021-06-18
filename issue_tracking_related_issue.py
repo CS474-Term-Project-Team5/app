@@ -14,7 +14,7 @@ from src.ne_extractor import NeExtractor
 from src.issue_holder import IssueHolder
 from src.event_holder import EventHolder
 
-YEAR = [2015]
+YEAR = [2017]
 
 
 def main():
@@ -94,10 +94,10 @@ def main():
                 if issue_num / 20 <= doc_num:
                     person, org, place = neExtractor.extract_top_3(sub_cluster)
                     top_issue = keywordExtractor.extract(sub_cluster)
-                    if top_issue[0] == issue_title:
-                        top_issue = top_issue[1:4]
-                    else:
-                        top_issue = top_issue[0:3]
+                    # if top_issue[0] == issue_title:
+                    #     top_issue = top_issue[1:4]
+                    # else:
+                    #     top_issue = top_issue[0:3]
 
                     event_vec = torch.stack(sub_cluster[:]['vec_e'].tolist()).mean(dim=0)
                     eventHolder = EventHolder(
@@ -107,29 +107,32 @@ def main():
             issueHolder.add_event(event)
             issue[cluster1] = issueHolder
 
+        # for i in issue:
+        #     print_issue(issue[i])
+        #     top_3 = []
+        #     for j in issue:
+        #         if i == j:
+        #             pass
+        #         else:
+        #             for e in issue[j].event:
+        #                 if len(top_3) < 3:
+        #                     dist = torch.dist(e.vec, issue[i].vec, p=2.0)
+        #                     top_3.append((e,dist))
+        #                     top_3 = sorted(top_3,key=lambda x:x[1])
+        #                 else:
+        #                     dist = torch.dist(e.vec, issue[i].vec, p=2.0)
+        #                     if top_3[-1][1] > dist:
+        #                         top_3[-1] = (e,dist)
+        #                     top_3 = sorted(top_3,key=lambda x:x[1])
+        #
+        #     print("{}".format(
+        #         "  ".join([capital(holder[0].topic[0]) for holder in top_3])))
+        #     for e in top_3:
+        #         print_event(e[0])\
         for i in issue:
             print_issue(issue[i])
-            top_3 = []
-            for j in issue:
-                if i == j:
-                    pass
-                else:
-                    for e in issue[j].event:
-                        if len(top_3) < 3:
-                            print(e.vec, issue[i].vec)
-                            dist = torch.dist(e.vec, issue[i].vec, p=2.0)
-                            top_3.append((e,dist))
-                            top_3 = sorted(top_3,key=lambda x:x[1])
-                        else:
-                            dist = torch.dist(e.vec, issue[i].vec, p=2.0)
-                            if top_3[-1][1] > dist:
-                                top_3[-1] = (e,dist)
-                            top_3 = sorted(top_3,key=lambda x:x[1])
-
-            print("{}".format(
-                "  ".join([capital(holder[0].topic[0]) for holder in top_3])))
-            for e in top_3:
-                print_event(e[0])
+            for j in issue[i].event:
+                print_event(j)
 
 
 
